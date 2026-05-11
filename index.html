@@ -102,7 +102,7 @@
         <div class="card" style="padding: 50px 20px;">
             <i class="fas fa-spinner fa-spin loader"></i>
             <div class="card-title">প্রোফাইল লোড হচ্ছে...</div>
-            <div class="card-desc">দয়া করে একটু অপেক্ষা করুন। আমরা আপনার টেলিগ্রাম ডাটা খুঁজছি।</div>
+            <div class="card-desc">দয়া করে একটু অপেক্ষা করুন। আমরা আপনার ডাটা চেক করছি।</div>
         </div>
     </div>
 
@@ -188,18 +188,18 @@
                 🎁 Your Prize:<br> <span id="success-prize" style="color: var(--ios-blue); font-size: 16px; font-weight: 800;">...</span>
             </div>
 
-            <button class="btn btn-premium" onclick="window.location.href='lottery.html'">
-                <i class="fas fa-dharmachakra"></i> লাইভ লটারি দেখুন
+            <button class="btn btn-premium" onclick="window.location.href='gift.html'">
+                <i class="fas fa-gift"></i> গিফট পেজে যান
             </button>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px; font-weight: 600;">
-                অটোমেটিক লটারি পেজে নিয়ে যাওয়া হচ্ছে... <span id="redirCount" style="color: var(--ios-red);">5</span>s
+                অটোমেটিক গিফট পেজে নিয়ে যাওয়া হচ্ছে... <span id="redirCount" style="color: var(--ios-red);">5</span>s
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAsP3AubiZpmvCRPngDePdvvQMiDTELCII",
@@ -243,20 +243,35 @@
             }
         };
 
-        // INIT & AUTO-REDIRECT LOGIC
+        // INIT & AUTO-REDIRECT LOGIC WITH FIRESTORE DUPLICATION CHECK
         window.onload = () => {
             const cachedData = localStorage.getItem(CACHE_KEY);
             if (cachedData) {
-                // User already registered, directly send them to the spinner!
-                window.location.href = 'lottery.html';
+                // User already registered locally, directly send them to the gift page!
+                window.location.href = 'gift.html';
             } else {
-                setTimeout(() => {
+                setTimeout(async () => {
                     const tgUser = tg?.initDataUnsafe?.user;
                     if (tgUser) {
                         userData.name = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim();
-                        userData.id = tgUser.id;
+                        userData.id = tgUser.id.toString();
                         userData.photo = tgUser.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.name)}&background=007aff&color=fff`;
                         
+                        // Check Database to see if the user is already registered (if cache was cleared)
+                        try {
+                            const q = query(collection(db, "giveaway_entries"), where("uid", "==", userData.id));
+                            const snapshot = await getDocs(q);
+                            
+                            if (!snapshot.empty) {
+                                // Already in DB, set cache again and redirect
+                                localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot.docs[0].data()));
+                                window.location.href = 'gift.html';
+                                return;
+                            }
+                        } catch (error) {
+                            console.error("Database check failed:", error);
+                        }
+
                         document.getElementById('ui-name').innerText = userData.name;
                         document.getElementById('ui-id').innerText = `ID: ${userData.id}`;
                         document.getElementById('ui-avatar').src = userData.photo;
@@ -430,7 +445,7 @@
                 
                 nextStep(5);
 
-                // Auto Redirect Countdown to Lottery Page
+                // Auto Redirect Countdown to Gift Page
                 let redirectCounter = 5;
                 const countEl = document.getElementById('redirCount');
                 const redirInt = setInterval(() => {
@@ -438,7 +453,7 @@
                     if(countEl) countEl.innerText = redirectCounter;
                     if(redirectCounter <= 0) {
                         clearInterval(redirInt);
-                        window.location.href = 'lottery.html';
+                        window.location.href = 'gift.html';
                     }
                 }, 1000);
 
