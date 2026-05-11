@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium Lottery | NAHID TRIX</title>
+    
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* === iOS PREMIUM LIGHT THEME === */
+        :root {
+            --bg-main: #f2f2f7;          
+            --bg-card: #ffffff;          
+            --text-main: #1c1c1e;        
+            --text-muted: #8e8e93;       
+            --ios-blue: #007aff;         
+            --ios-green: #34c759;
+            --ios-purple: #af52de;
+            --ios-orange: #ff9500;
+            --ios-red: #ff3b30;
+            --shadow-soft: 0 10px 40px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            background-color: var(--bg-main); color: var(--text-main); 
+            overflow: hidden; display: flex; flex-direction: column; height: 100vh;
+        }
+
+        /* HEADER */
+        header { 
+            display: flex; justify-content: center; align-items: center; padding: 15px; 
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 0.5px solid rgba(0,0,0,0.08); z-index: 100;
+        }
+        .logo { font-family: 'Orbitron', sans-serif; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+        .logo .nahid { background: linear-gradient(to right, #ff9500, #ff2d55); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo .trix { color: var(--text-main); }
+
+        /* MAIN STAGE */
+        .stage { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; width: 100%; }
+
+        /* ====== APPLE STYLE CLOCK RING ====== */
+        .clock-container {
+            position: relative;
+            width: 340px; height: 340px;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* Lightning / Thunder Effect (Visible & Striking) */
+        .energy-ring {
+            position: absolute; width: 330px; height: 330px; border-radius: 50%;
+            background: conic-gradient(from 0deg, transparent 60%, var(--ios-blue) 80%, #00e5ff 100%);
+            animation: spinLightning 1.5s linear infinite; filter: blur(5px); z-index: 1;
+        }
+        .energy-ring::before {
+            content: ''; position: absolute; inset: -6px; border-radius: 50%;
+            background: conic-gradient(from 180deg, transparent 60%, var(--ios-purple) 80%, #ff2d55 100%);
+            animation: spinLightning 2s linear infinite reverse; filter: blur(8px);
+        }
+        @keyframes spinLightning { to { transform: rotate(360deg); } }
+
+        /* Main Frosted Glass Orbit */
+        .orbit-ring {
+            position: absolute; width: 310px; height: 310px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1.5px solid rgba(255, 255, 255, 0.9); box-shadow: var(--shadow-soft);
+            z-index: 5; display: flex; justify-content: center; align-items: center;
+            transform: translate3d(0,0,0);
+        }
+
+        /* Spinning mechanism */
+        .spin-layer {
+            position: absolute; width: 100%; height: 100%; border-radius: 50%;
+            animation: spinClock 20s linear infinite;
+        }
+        .spin-slowdown { animation: spinClockSlow 6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards !important; }
+        @keyframes spinClock { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spinClockSlow { from { transform: rotate(0deg); } to { transform: rotate(1080deg); } }
+
+        /* AVATARS & CONTENT */
+        .avatar-slot {
+            position: absolute; width: 50px; height: 50px;
+            transform: translate(-50%, -50%); z-index: 10; transition: opacity 0.8s ease; cursor: pointer;
+        }
+        
+        /* 💥 FIX: পপআপ বা ব্যাজ অ্যাকটিভ হলে সবার ওপরে (Front) নিয়ে আসার কোড 💥 */
+        .avatar-slot.at-top { z-index: 60; }
+        .avatar-slot.has-popup { z-index: 100 !important; }
+
+        /* The wrapper that counter-spins so popup and badge stay upright */
+        .avatar-content {
+            position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
+            animation: counterSpin 20s linear infinite;
+        }
+        .counter-slowdown { animation: counterSpinSlow 6s cubic-bezier(0.1, 0.8, 0.2, 1) forwards !important; }
+        @keyframes counterSpin { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+        @keyframes counterSpinSlow { from { transform: rotate(0deg); } to { transform: rotate(-1080deg); } }
+
+        .avatar-img {
+            width: 50px; height: 50px; border-radius: 50%; object-fit: cover;
+            background: var(--bg-card); padding: 3px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.05);
+            transition: 0.2s; pointer-events: none;
+        }
+        .avatar-slot:active .avatar-img { transform: scale(0.9); }
+
+        /* ====== INTERACTIVE POPUP (CLICK) ====== */
+        .user-popup {
+            position: absolute; top: -65px; left: 50%; transform: translateX(-50%) scale(0.5);
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            padding: 8px 12px; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+            opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            white-space: nowrap; text-align: center; border: 1px solid rgba(0,0,0,0.05); z-index: 50;
+        }
+        .user-popup.show { transform: translateX(-50%) scale(1); opacity: 1; }
+        .user-popup::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%);
+            border-width: 5px 5px 0; border-style: solid; border-color: rgba(255,255,255,0.95) transparent transparent transparent;
+        }
+        .pop-name { font-size: 12px; font-weight: 800; color: var(--text-main); margin-bottom: 2px; }
+        .pop-prize { font-size: 10px; font-weight: 600; color: var(--ios-blue); display: flex; align-items: center; gap: 4px; justify-content: center;}
+
+        /* ====== AUTO TOP NAME HIGHLIGHT ====== */
+        .top-badge {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%) scale(0.5);
+            background: var(--text-main); color: #fff; font-size: 10px; font-weight: 700; padding: 3px 10px;
+            border-radius: 12px; opacity: 0; transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .avatar-slot.at-top .top-badge { transform: translateX(-50%) scale(1); opacity: 1; }
+        /* Hide top badge if popup is open so they don't overlap */
+        .avatar-slot.has-popup .top-badge { opacity: 0 !important; }
+
+        /* WINNER TAKEOVER ANIMATION */
+        .winner-takeover {
+            position: absolute; top: 50%; left: 50%; width: 100%; height: 100%;
+            transform: translate(-50%, -50%) scale(1) !important; z-index: 100 !important;
+            box-shadow: 0 20px 50px rgba(0,122,255,0.4); border: 8px solid #fff; border-radius: 50%;
+            transition: all 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: none !important; margin: 0 !important; opacity: 1 !important;
+        }
+        .winner-takeover .avatar-content { animation: none !important; }
+
+        /* ====== CENTER TIMER BOX ====== */
+        .timer-box {
+            position: absolute; width: 170px; height: 170px; border-radius: 40px; 
+            background: var(--bg-card); box-shadow: inset 0 2px 10px rgba(0,0,0,0.03), 0 10px 30px rgba(0,0,0,0.08);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; border: 1px solid rgba(0,0,0,0.04); transition: 0.5s ease;
+        }
+        .timer-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 5px; }
+        .timer-val { font-size: 32px; font-weight: 800; color: var(--text-main); line-height: 1.1; font-family: -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: -1px; }
+        .timer-days { font-size: 14px; font-weight: 600; color: var(--ios-blue); margin-bottom: 2px; }
+        .hide-timer { opacity: 0; transform: scale(0.5); pointer-events: none; }
+
+        /* ====== AUDIO EQUALIZER (MUSIC VISUALIZER) ====== */
+        .equalizer {
+            display: flex; align-items: flex-end; justify-content: center;
+            gap: 4px; height: 16px; margin-top: 10px; z-index: 2;
+        }
+        .eq-bar {
+            width: 4px; border-radius: 2px;
+            animation: eqBounce 0.5s infinite alternate ease-in-out;
+        }
+        .eq-bar-1 { background: #00e5ff; box-shadow: 0 0 5px #00e5ff; animation-delay: 0.1s; }
+        .eq-bar-2 { background: #af52de; box-shadow: 0 0 5px #af52de; animation-delay: 0.3s; }
+        .eq-bar-3 { background: #ff2d55; box-shadow: 0 0 5px #ff2d55; animation-delay: 0.0s; }
+        .eq-bar-4 { background: #ff9500; box-shadow: 0 0 5px #ff9500; animation-delay: 0.2s; }
+        .eq-bar-5 { background: #34c759; box-shadow: 0 0 5px #34c759; animation-delay: 0.4s; }
+
+        @keyframes eqBounce {
+            0% { height: 4px; opacity: 0.5; }
+            100% { height: 16px; opacity: 1; }
+        }
+
+        /* WINNER PANEL */
+        .winner-panel {
+            position: absolute; bottom: 80px; width: 90%; max-width: 350px;
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 20px; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            text-align: center; border: 1.5px solid #fff;
+            transform: translateY(150%); transition: 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 200;
+        }
+        .winner-panel.show { transform: translateY(0); }
+        .win-title { font-size: 24px; font-weight: 800; color: var(--ios-green); margin-bottom: 5px; }
+        .win-name { font-size: 18px; font-weight: 700; color: var(--text-main); }
+
+        /* ====== BOTTOM STATS BAR ====== */
+        .bottom-stats {
+            position: absolute; bottom: 25px; width: 100%; display: flex; justify-content: center; z-index: 50;
+        }
+        .stats-pill {
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(15px); border: 1px solid rgba(0,0,0,0.05);
+            padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; color: var(--text-main);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; align-items: center; gap: 8px;
+        }
+        .stats-pill i { color: var(--ios-blue); font-size: 16px; }
+
+    </style>
+</head>
+<body>
+
+    <audio id="bgMusic" src="audio.mp3" loop autoplay></audio>
+
+    <header>
+        <div class="logo">
+            <span class="nahid">NAHID</span> <span class="trix">LOTTERY</span> <i class="fas fa-gift" style="color: var(--ios-blue);"></i>
+        </div>
+    </header>
+
+    <div class="stage">
+        
+        <div class="clock-container">
+            <div class="energy-ring" id="energyRing"></div>
+            
+            <div class="orbit-ring">
+                <div class="spin-layer" id="spinLayer">
+                    </div>
+                
+                <div class="timer-box" id="timerBox">
+                    <div class="timer-title" id="timerTitle">Draw Starts In</div>
+                    <div class="timer-days" id="t-dh">00d 00h</div>
+                    <div class="timer-val" id="t-ms">00:00</div>
+                    
+                    <div class="equalizer" id="audioVisualizer">
+                        <span class="eq-bar eq-bar-1"></span>
+                        <span class="eq-bar eq-bar-2"></span>
+                        <span class="eq-bar eq-bar-3"></span>
+                        <span class="eq-bar eq-bar-4"></span>
+                        <span class="eq-bar eq-bar-5"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="winner-panel" id="winnerPanel">
+            <div class="win-title">🎉 WINNER! 🎉</div>
+            <div class="win-name" id="winnerName">Loading...</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:5px;">Congratulations on winning the giveaway!</div>
+        </div>
+    </div>
+
+    <div class="bottom-stats">
+        <div class="stats-pill" id="totalCountBadge">
+            <i class="fas fa-spinner fa-spin"></i> Loading Pool...
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAsP3AubiZpmvCRPngDePdvvQMiDTELCII",
+            authDomain: "apple-bot-sell.firebaseapp.com",
+            projectId: "apple-bot-sell",
+            storageBucket: "apple-bot-sell.firebasestorage.app",
+            messagingSenderId: "84956813839",
+            appId: "1:84956813839:web:5c2451f102a2291eafe17a"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const botToken = "7851282160:AAEhW0xMLy_gKnII0WJYnxAqIh3QA5RrN40";
+        const targetChannel = "@Earning_with_Nahid";
+
+        const tg = window.Telegram?.WebApp;
+        if(tg) { tg.expand(); tg.setHeaderColor('#ffffff'); }
+
+        let allParticipants = [];
+        const MAX_VISIBLE_SLOTS = 12; 
+        let currentAvatarsIndex = 0;
+        let timerInterval;
+        let hasPosted10MinWarning = false;
+        let isLotteryOver = false;
+        let popupTimeout;
+
+        const spinLayer = document.getElementById('spinLayer');
+
+        // ==========================================
+        // CACHING CONSTANTS (SUPER ALGORITHM)
+        // ==========================================
+        const CACHE_KEY = "nahid_lottery_data_v1";
+        const CACHE_TIME_KEY = "nahid_lottery_time_v1";
+        const CACHE_DURATION = 20 * 60 * 1000; // 20 Minutes in Milliseconds
+
+        window.triggerHaptic = () => { if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }
+
+        // ==========================================
+        // AUDIO AUTOPLAY BYPASS
+        // ==========================================
+        const bgMusic = document.getElementById('bgMusic');
+        if (bgMusic) bgMusic.volume = 0.5; 
+        
+        let playPromise = bgMusic ? bgMusic.play() : undefined;
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                const startAudio = () => {
+                    if (!isLotteryOver && bgMusic) bgMusic.play();
+                    document.body.removeEventListener('click', startAudio);
+                    document.body.removeEventListener('touchstart', startAudio);
+                };
+                document.body.addEventListener('click', startAudio, { once: true });
+                document.body.addEventListener('touchstart', startAudio, { once: true });
+            });
+        }
+
+        // ==========================================
+        // 1. FETCH PARTICIPANTS (WITH LOCAL CACHING)
+        // ==========================================
+        async function fetchParticipants() {
+            const now = Date.now();
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const lastFetch = localStorage.getItem(CACHE_TIME_KEY);
+
+            if (cachedData && lastFetch && (now - parseInt(lastFetch) < CACHE_DURATION)) {
+                console.log("Loaded participants from Local Cache");
+                allParticipants = JSON.parse(cachedData);
+                renderParticipants();
+            } else {
+                console.log("Fetching participants from Server");
+                try {
+                    allParticipants = [];
+                    const querySnapshot = await getDocs(collection(db, "giveaway_entries"));
+                    querySnapshot.forEach((doc) => {
+                        allParticipants.push(doc.data());
+                    });
+
+                    localStorage.setItem(CACHE_KEY, JSON.stringify(allParticipants));
+                    localStorage.setItem(CACHE_TIME_KEY, now.toString());
+
+                    renderParticipants();
+                } catch (error) {
+                    console.error("Firebase Error: ", error);
+                    document.getElementById('totalCountBadge').innerHTML = `<i class="fas fa-exclamation-triangle" style="color:var(--ios-red)"></i> System Error`;
+                    
+                    if (cachedData) {
+                        allParticipants = JSON.parse(cachedData);
+                        renderParticipants();
+                    }
+                }
+            }
+        }
+
+        function renderParticipants() {
+            if(allParticipants.length > 0) {
+                document.getElementById('totalCountBadge').innerHTML = `<i class="fas fa-users"></i> Total Participants: ${allParticipants.length}`;
+                initAvatarSlots();
+                startAvatarSwapCycle();
+                requestAnimationFrame(trackTopAvatar); 
+            } else {
+                document.getElementById('totalCountBadge').innerHTML = `<i class="fas fa-box-open"></i> No entries found`;
+            }
+        }
+
+        function initAvatarSlots() {
+            const radius = 155; 
+            spinLayer.innerHTML = ''; 
+
+            for(let i=0; i<MAX_VISIBLE_SLOTS; i++) {
+                const angle = (i / MAX_VISIBLE_SLOTS) * 2 * Math.PI; 
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+
+                const user = allParticipants[i % allParticipants.length];
+                const photoUrl = user.photo || `https://ui-avatars.com/api/?name=${user.name}&background=007aff&color=fff`;
+
+                const slot = document.createElement('div');
+                slot.className = 'avatar-slot';
+                slot.style.left = `calc(50% + ${x}px)`;
+                slot.style.top = `calc(50% + ${y}px)`;
+                slot.id = `slot-${i}`;
+                
+                slot.onclick = (e) => {
+                    e.stopPropagation();
+                    showPopup(i);
+                };
+
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'avatar-content';
+                contentWrapper.id = `contentWrapper-${i}`;
+
+                const img = document.createElement('img');
+                img.src = photoUrl;
+                img.className = 'avatar-img';
+                img.id = `img-${i}`;
+
+                const popup = document.createElement('div');
+                popup.className = 'user-popup';
+                popup.id = `popup-${i}`;
+                popup.innerHTML = `
+                    <div class="pop-name" id="popName-${i}">${user.name}</div>
+                    <div class="pop-prize"><i class="fas fa-gift"></i> <span id="popPrize-${i}">${user.prizeName || 'Gift'}</span></div>
+                `;
+
+                const topBadge = document.createElement('div');
+                topBadge.className = 'top-badge';
+                topBadge.id = `topBadge-${i}`;
+                topBadge.innerText = user.name.split(' ')[0]; 
+
+                contentWrapper.appendChild(img);
+                contentWrapper.appendChild(popup);
+                contentWrapper.appendChild(topBadge);
+                slot.appendChild(contentWrapper);
+                spinLayer.appendChild(slot);
+            }
+            currentAvatarsIndex = MAX_VISIBLE_SLOTS;
+        }
+
+        // ==========================================
+        // 2. INTERACTIVE POPUP LOGIC
+        // ==========================================
+        function showPopup(index) {
+            if(isLotteryOver) return;
+            triggerHaptic();
+
+            document.querySelectorAll('.user-popup').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.avatar-slot').forEach(s => s.classList.remove('has-popup'));
+            
+            const popup = document.getElementById(`popup-${index}`);
+            const slot = document.getElementById(`slot-${index}`);
+            
+            if(popup && slot) {
+                slot.classList.add('has-popup'); 
+                popup.classList.add('show');
+                
+                clearTimeout(popupTimeout);
+                popupTimeout = setTimeout(() => {
+                    popup.classList.remove('show');
+                    slot.classList.remove('has-popup');
+                }, 4000); 
+            }
+        }
+
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.user-popup').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.avatar-slot').forEach(s => s.classList.remove('has-popup'));
+        });
+
+        // ==========================================
+        // 3. AUTO TOP-NAME HIGHLIGHT
+        // ==========================================
+        function trackTopAvatar() {
+            if (isLotteryOver) return;
+            
+            const slots = document.querySelectorAll('.avatar-slot');
+            let highestSlot = null;
+            let minTop = Infinity;
+
+            slots.forEach(slot => {
+                const rect = slot.getBoundingClientRect();
+                if (rect.top < minTop) {
+                    minTop = rect.top;
+                    highestSlot = slot;
+                }
+            });
+
+            slots.forEach(slot => {
+                if (slot === highestSlot) {
+                    slot.classList.add('at-top');
+                } else {
+                    slot.classList.remove('at-top');
+                }
+            });
+
+            requestAnimationFrame(trackTopAvatar);
+        }
+
+        // ==========================================
+        // 4. DYNAMIC AVATAR SWAP
+        // ==========================================
+        function startAvatarSwapCycle() {
+            if(allParticipants.length <= MAX_VISIBLE_SLOTS) return; 
+
+            setInterval(() => {
+                if(isLotteryOver) return;
+
+                const randomSlotId = Math.floor(Math.random() * MAX_VISIBLE_SLOTS);
+                const slot = document.getElementById(`slot-${randomSlotId}`);
+                
+                if(slot.classList.contains('has-popup') || slot.classList.contains('at-top')) return;
+
+                const img = document.getElementById(`img-${randomSlotId}`);
+                const popName = document.getElementById(`popName-${randomSlotId}`);
+                const popPrize = document.getElementById(`popPrize-${randomSlotId}`);
+                const topBadge = document.getElementById(`topBadge-${randomSlotId}`);
+                
+                slot.style.opacity = '0';
+                
+                setTimeout(() => {
+                    const user = allParticipants[currentAvatarsIndex % allParticipants.length];
+                    img.src = user.photo || `https://ui-avatars.com/api/?name=${user.name}&background=007aff&color=fff`;
+                    popName.innerText = user.name;
+                    popPrize.innerText = user.prizeName || 'Gift';
+                    topBadge.innerText = user.name.split(' ')[0];
+                    
+                    currentAvatarsIndex++;
+                    slot.style.opacity = '1';
+                }, 800); 
+
+            }, 2500); 
+        }
+
+        // ==========================================
+        // 5. TELEGRAM 10-MIN WARNING ALERT
+        // ==========================================
+        async function postLiveAlertToTelegram() {
+            try {
+                const tgText = `🚨 **GIVEAWAY LIVE ALERT!** 🚨\n\nআমাদের মেগা লটারি আর মাত্র **১০ মিনিটের** মধ্যে ড্র হতে যাচ্ছে! ⏳\nযেকোনো মুহূর্তে লাইভ কাউন্টডাউন শেষ হয়ে যাবে।\n\n👇 এখনই সরাসরি লিংকে ঢুকে লাইভ স্পিনার রেজাল্ট দেখুন:\n👉 http://t.me/nahid_trix_bot/gift`;
+                
+                const tgUrl = `https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${targetChannel}&text=${encodeURIComponent(tgText)}&parse_mode=Markdown`;
+                await fetch(tgUrl);
+            } catch(e) {}
+        }
+
+        // ==========================================
+        // 6. TIMER & LOTTERY LOGIC
+        // ==========================================
+        function startLotteryTimer() {
+            function calculateNextWednesday() {
+                const now = new Date();
+                const resultDate = new Date(now);
+                resultDate.setHours(23, 59, 59, 0);
+                const daysToWed = (3 + 7 - now.getDay()) % 7;
+                const addDays = daysToWed === 0 ? 7 : daysToWed; 
+                resultDate.setDate(now.getDate() + addDays);
+                return resultDate.getTime();
+            }
+
+            const targetTime = calculateNextWednesday(); 
+            
+            timerInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = Math.floor((targetTime - now) / 1000); 
+
+                if (distance <= 0 && !isLotteryOver) {
+                    clearInterval(timerInterval);
+                    triggerLotteryStop();
+                    return;
+                }
+
+                if (distance === 600 && !hasPosted10MinWarning) {
+                    hasPosted10MinWarning = true;
+                    postLiveAlertToTelegram();
+                }
+
+                const d = Math.floor(distance / (60 * 60 * 24));
+                const h = Math.floor((distance % (60 * 60 * 24)) / (60 * 60));
+                const m = Math.floor((distance % (60 * 60)) / 60);
+                const s = Math.floor(distance % 60);
+
+                document.getElementById('t-dh').innerText = `${d.toString().padStart(2,'0')}d ${h.toString().padStart(2,'0')}h`;
+                document.getElementById('t-ms').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+                
+                if(d===0 && h===0 && m===0 && s <= 10) {
+                    triggerHaptic();
+                    document.getElementById('t-ms').style.color = "var(--ios-red)";
+                }
+
+            }, 1000);
+        }
+
+        // ==========================================
+        // 7. WINNER TAKEOVER ANIMATION
+        // ==========================================
+        function triggerLotteryStop() {
+            isLotteryOver = true;
+            triggerHaptic();
+
+            if(bgMusic) bgMusic.pause();
+            const visualizer = document.getElementById('audioVisualizer');
+            if(visualizer) visualizer.style.display = 'none';
+
+            document.querySelectorAll('.user-popup').forEach(p => p.classList.remove('show'));
+            document.querySelectorAll('.top-badge').forEach(b => b.style.opacity = '0');
+
+            spinLayer.classList.add('spin-slowdown');
+            document.querySelectorAll('.avatar-content').forEach(el => el.classList.add('counter-slowdown'));
+            
+            document.getElementById('timerBox').classList.add('hide-timer');
+            document.getElementById('energyRing').style.animation = "none";
+            document.getElementById('totalCountBadge').innerHTML = "<i class='fas fa-sync fa-spin'></i> Processing Winner...";
+
+            setTimeout(() => {
+                showWinnerAnimation();
+            }, 6000); 
+        }
+
+        function showWinnerAnimation() {
+            if(allParticipants.length === 0) return;
+
+            const winnerIndex = Math.floor(Math.random() * allParticipants.length);
+            const winner = allParticipants[winnerIndex];
+
+            document.querySelectorAll('.avatar-slot').forEach(slot => { slot.style.opacity = '0'; });
+
+            const winSlot = document.createElement('div');
+            winSlot.className = 'avatar-slot winner-takeover';
+            const winImg = document.createElement('img');
+            winImg.src = winner.photo || `https://ui-avatars.com/api/?name=${winner.name}&background=007aff&color=fff`;
+            winImg.style.width = '100%'; winImg.style.height = '100%'; winImg.style.borderRadius = '50%'; winImg.style.objectFit = 'cover';
+            winSlot.appendChild(winImg);
+            
+            document.querySelector('.orbit-ring').appendChild(winSlot);
+
+            document.getElementById('winnerName').innerText = winner.name;
+            document.getElementById('winnerPanel').classList.add('show');
+            document.getElementById('totalCountBadge').innerHTML = "<i class='fas fa-check-circle' style='color:var(--ios-green)'></i> Giveaway Completed!";
+
+            triggerHaptic();
+            fireConfetti();
+        }
+
+        function fireConfetti() {
+            var duration = 3000;
+            var end = Date.now() + duration;
+
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#007aff', '#ff2d55', '#ff9500'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#007aff', '#ff2d55', '#ff9500'] });
+                if (Date.now() < end) { requestAnimationFrame(frame); }
+            }());
+        }
+
+        window.onload = () => {
+            fetchParticipants();
+            startLotteryTimer();
+        };
+
+    </script>
+</body>
+</html>
