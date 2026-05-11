@@ -188,11 +188,11 @@
                 🎁 Your Prize:<br> <span id="success-prize" style="color: var(--ios-blue); font-size: 16px; font-weight: 800;">...</span>
             </div>
 
-            <button class="btn btn-premium" onclick="window.location.href='gift.html'">
-                <i class="fas fa-gift"></i> গিফট পেজে যান
+            <button class="btn btn-premium" onclick="window.location.href='https://t.me/nahid_trix_bot/lottery'">
+                <i class="fas fa-dharmachakra"></i> লাইভ লটারি দেখুন
             </button>
             <div style="font-size: 12px; color: var(--text-muted); margin-top: 10px; font-weight: 600;">
-                অটোমেটিক গিফট পেজে নিয়ে যাওয়া হচ্ছে... <span id="redirCount" style="color: var(--ios-red);">5</span>s
+                অটোমেটিক লটারি পেজে নিয়ে যাওয়া হচ্ছে... <span id="redirCount" style="color: var(--ios-red);">5</span>s
             </div>
         </div>
     </div>
@@ -229,7 +229,7 @@
             document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
             document.getElementById(`step-${step}`).classList.add('active');
         }
-        window.retryLogin = () => { window.location.href = 'https://t.me/nahid_trix_bot/gift'; }
+        window.retryLogin = () => { window.location.href = 'https://t.me/nahid_trix_bot/lottery'; }
         window.closeApp = () => { if(tg) { tg.close(); } else { window.close(); } }
 
         // Mian App Details Link Generator
@@ -247,8 +247,8 @@
         window.onload = () => {
             const cachedData = localStorage.getItem(CACHE_KEY);
             if (cachedData) {
-                // User already registered locally, directly send them to the gift page!
-                window.location.href = 'gift.html';
+                // User already registered locally, directly send them to the target link
+                window.location.href = 'https://t.me/nahid_trix_bot/lottery';
             } else {
                 setTimeout(async () => {
                     const tgUser = tg?.initDataUnsafe?.user;
@@ -265,7 +265,7 @@
                             if (!snapshot.empty) {
                                 // Already in DB, set cache again and redirect
                                 localStorage.setItem(CACHE_KEY, JSON.stringify(snapshot.docs[0].data()));
-                                window.location.href = 'gift.html';
+                                window.location.href = 'https://t.me/nahid_trix_bot/lottery';
                                 return;
                             }
                         } catch (error) {
@@ -445,7 +445,7 @@
                 
                 nextStep(5);
 
-                // Auto Redirect Countdown to Gift Page
+                // Auto Redirect Countdown to Target Link
                 let redirectCounter = 5;
                 const countEl = document.getElementById('redirCount');
                 const redirInt = setInterval(() => {
@@ -453,7 +453,7 @@
                     if(countEl) countEl.innerText = redirectCounter;
                     if(redirectCounter <= 0) {
                         clearInterval(redirInt);
-                        window.location.href = 'gift.html';
+                        window.location.href = 'https://t.me/nahid_trix_bot/lottery';
                     }
                 }, 1000);
 
